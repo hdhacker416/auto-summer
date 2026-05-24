@@ -6,7 +6,8 @@ from ..models import Friend, Message, SendResult
 
 
 class MessagesPage:
-    DEFAULT_SKIP_NAMES: set[str] = set()
+    DEFAULT_SKIP_NAMES: set[str] = {"Summer小秘书", "收到答卷", "答题记录"}
+    DEFAULT_SKIP_KEYWORDS: tuple[str, ...] = ("收到答卷", "答题记录")
 
     def __init__(self, account):
         self.account = account
@@ -28,7 +29,7 @@ class MessagesPage:
         skip = self.DEFAULT_SKIP_NAMES | (skip_names or set())
         friends: list[Friend] = []
         for node in tree.find_all_by_id(Ids.MESSAGE_NICKNAME):
-            if not node.text or node.text in skip:
+            if self._should_skip_chat(node.text, skip):
                 continue
             row = node.clickable_ancestor()
             preview = row.find_descendant_by_id(Ids.MESSAGE_PREVIEW)
@@ -43,6 +44,11 @@ class MessagesPage:
             if limit is not None and len(friends) >= limit:
                 break
         return friends
+
+    def _should_skip_chat(self, nickname: str, skip_names: set[str]) -> bool:
+        if not nickname or nickname in skip_names:
+            return True
+        return any(keyword in nickname for keyword in self.DEFAULT_SKIP_KEYWORDS)
 
     def _tap_friend_row(self, friend: Friend) -> None:
         self.open()

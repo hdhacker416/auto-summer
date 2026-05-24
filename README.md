@@ -28,6 +28,16 @@ with SummerAccount(execute=True) as account:
 
 `SummerAccount()` 会自动选择当前唯一连接的 ADB 设备。只有同时连接多台手机时，才需要手动传 `serial`。
 
+`get_friend_list()` 默认会跳过系统会话入口，例如 `收到答卷`、`答题记录`、`Summer小秘书`。如果你们还有新的系统入口，可以这样额外跳过：
+
+```python
+with SummerAccount(execute=True) as account:
+    friends = account.get_friend_list(
+        limit=5,
+        skip_names={"系统通知", "活动助手"},
+    )
+```
+
 ## 手动输入中文
 
 先在手机上手动点到某个输入框，然后让 SDK 输入中文：

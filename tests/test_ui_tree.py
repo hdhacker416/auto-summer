@@ -1,6 +1,9 @@
 import unittest
+from unittest.mock import patch
 
+from summer_automation.adb import Adb
 from summer_automation.constants import Ids
+from summer_automation.errors import DeviceSelectionError
 from summer_automation.ui_tree import Bounds, UiTree
 
 
@@ -23,6 +26,15 @@ class UiTreeTests(unittest.TestCase):
 
         self.assertEqual(node.text, "测试用户A")
         self.assertEqual(node.clickable_ancestor().bounds.center, (50, 25))
+
+    def test_resolve_single_device(self):
+        with patch.object(Adb, "list_devices", return_value=["DEVICE123"]):
+            self.assertEqual(Adb.resolve_serial(), "DEVICE123")
+
+    def test_resolve_requires_explicit_serial_for_multiple_devices(self):
+        with patch.object(Adb, "list_devices", return_value=["A", "B"]):
+            with self.assertRaises(DeviceSelectionError):
+                Adb.resolve_serial()
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .constants import PACKAGE_NAME
 from .device import AndroidDevice
-from .models import Friend, Stranger
+from .models import FilterProbeResult, Friend, Stranger, StrangerFilters
 from .pages.chat import ChatPage
 from .pages.main import MainPage
 from .pages.messages import MessagesPage
@@ -94,5 +94,16 @@ class SummerAccount:
             return friends
         raise ValueError(f"Unsupported friend source: {source}")
 
-    def get_stranger_list(self, *, limit: int | None = None) -> list[Stranger]:
-        return self.strangers.list_visible(limit=limit)
+    def get_stranger_list(
+        self,
+        *,
+        limit: int | None = None,
+        filters: StrangerFilters | None = None,
+        max_pages: int = 1,
+    ) -> list[Stranger]:
+        if max_pages <= 1:
+            return self.strangers.list_visible(limit=limit, filters=filters)
+        return self.strangers.list_all(limit=limit, max_pages=max_pages, filters=filters)
+
+    def probe_filter_entitlement(self, filters: StrangerFilters) -> FilterProbeResult:
+        return self.strangers.probe_filter_entitlement(filters)

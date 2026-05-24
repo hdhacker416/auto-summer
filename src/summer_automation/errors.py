@@ -25,3 +25,7 @@ class SafetyError(SummerAutomationError):
 
 class AppStateError(SummerAutomationError):
     """Raised when the app is not in the expected activity or page state."""
+
+
+class DeviceSelectionError(SummerAutomationError):
+    """Raised when an ADB device cannot be selected automatically."""

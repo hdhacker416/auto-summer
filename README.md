@@ -33,6 +33,13 @@ with SummerAccount(serial="YOUR_DEVICE_SERIAL", execute=True) as account:
     history = friend.read_history(limit=20)
 ```
 
+If exactly one Android device is connected, `serial` can be omitted:
+
+```python
+with SummerAccount(execute=True) as account:
+    account.input_text("你好", clear=True)
+```
+
 Manual text input into the currently focused phone field:
 
 ```python
@@ -41,6 +48,50 @@ from summer_automation import SummerAccount
 with SummerAccount(serial="YOUR_DEVICE_SERIAL", execute=True) as account:
     account.input_text("你好，这段文字会输入到当前焦点输入框", clear=True)
 ```
+
+Collect more than the currently visible stranger rows by scrolling:
+
+```python
+from summer_automation import SummerAccount
+
+with SummerAccount(execute=True) as account:
+    strangers = account.get_stranger_list(limit=50, max_pages=8)
+
+    for stranger in strangers:
+        print(stranger.nickname, stranger.age, stranger.school, stranger.distance, stranger.bio)
+```
+
+Apply supported filters in an authorized QA account:
+
+```python
+from summer_automation import StrangerFilters, SummerAccount
+
+filters = StrangerFilters(
+    gender="female",
+    relationship="single",
+    active="today",
+    has_photos=True,
+    department="计算机",
+)
+
+with SummerAccount(execute=True) as account:
+    strangers = account.get_stranger_list(filters=filters, limit=20, max_pages=5)
+```
+
+Probe whether a non-VIP account can apply a VIP-gated filter:
+
+```python
+from summer_automation import StrangerFilters, SummerAccount
+
+filters = StrangerFilters(active="today", has_photos=True)
+
+with SummerAccount(execute=True) as account:
+    result = account.probe_filter_entitlement(filters)
+    print(result.vip_blocked, result.applied, result.detail)
+```
+
+Run this probe with a controlled non-VIP account. A VIP test account can verify
+the automation path, but it cannot prove the non-VIP authorization boundary.
 
 Stranger/paper flow:
 

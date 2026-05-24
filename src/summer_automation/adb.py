@@ -4,7 +4,7 @@ import subprocess
 from dataclasses import dataclass
 from typing import Iterable
 
-from .errors import AdbCommandError
+from .errors import AdbCommandError, DeviceSelectionError
 
 
 @dataclass(frozen=True)
@@ -83,3 +83,17 @@ class Adb:
             if len(parts) >= 2 and parts[1] == "device":
                 devices.append(parts[0])
         return devices
+
+    @classmethod
+    def resolve_serial(cls, serial: str | None = None, adb_path: str = "adb") -> str:
+        if serial:
+            return serial
+        devices = cls.list_devices(adb_path=adb_path)
+        if len(devices) == 1:
+            return devices[0]
+        if not devices:
+            raise DeviceSelectionError("No ADB device is connected.")
+        raise DeviceSelectionError(
+            "Multiple ADB devices are connected; pass serial explicitly. "
+            f"Connected devices: {', '.join(devices)}"
+        )

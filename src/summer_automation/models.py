@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Mapping, Sequence
+from typing import TYPE_CHECKING, Literal, Mapping, Sequence
 
 from .ui_tree import Bounds
 
@@ -40,6 +40,29 @@ class AnswerResult:
     answered: bool
     submitted: bool = False
     dry_run: bool = False
+    detail: str = ""
+
+
+@dataclass(frozen=True)
+class StrangerFilters:
+    gender: Literal["all", "male", "female"] | None = None
+    relationship: Literal["all", "single"] | None = None
+    active: Literal["all", "today"] | None = None
+    sexual_orientation: Literal["all", "opposite", "same"] | None = None
+    has_photos: bool | None = None
+    department: str | None = None
+
+
+@dataclass
+class FilterProbeResult:
+    attempted: bool
+    applied: bool
+    vip_blocked: bool = False
+    before_count: int = 0
+    after_count: int = 0
+    before_signature: list[str] = field(default_factory=list)
+    after_signature: list[str] = field(default_factory=list)
+    visible_texts: list[str] = field(default_factory=list)
     detail: str = ""
 
 

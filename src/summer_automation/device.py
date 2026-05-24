@@ -25,7 +25,8 @@ class AndroidDevice:
         log_message_content: bool = False,
         timeout: int = 20,
     ):
-        self.adb = Adb(serial=serial, adb_path=adb_path, timeout=timeout)
+        self.serial = Adb.resolve_serial(serial, adb_path=adb_path)
+        self.adb = Adb(serial=self.serial, adb_path=adb_path, timeout=timeout)
         self.package_name = package_name
         self.safety = SafetyConfig(
             execute=execute,

@@ -84,11 +84,22 @@ class Friend(Person):
     def send_message(self, text: str) -> SendResult:
         return self.account.messages.send_message(self, text)
 
-    def read_history(self, limit: int = 50) -> list[Message]:
-        return self.account.messages.read_history(self, limit=limit)
+    def read_history(self, limit: int | None = 50, *, max_pages: int = 1) -> list[Message]:
+        return self.account.messages.read_history(self, limit=limit, max_pages=max_pages)
 
-    def receive_messages(self, since: str | None = None, limit: int = 50) -> list[Message]:
-        return self.account.messages.receive_messages(self, since=since, limit=limit)
+    def receive_messages(
+        self,
+        since: str | None = None,
+        limit: int | None = 50,
+        *,
+        max_pages: int = 1,
+    ) -> list[Message]:
+        return self.account.messages.receive_messages(
+            self,
+            since=since,
+            limit=limit,
+            max_pages=max_pages,
+        )
 
 
 @dataclass

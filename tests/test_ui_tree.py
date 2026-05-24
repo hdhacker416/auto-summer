@@ -4,6 +4,8 @@ from unittest.mock import patch
 from summer_automation.adb import Adb
 from summer_automation.constants import Ids
 from summer_automation.errors import DeviceSelectionError
+from summer_automation.models import Message
+from summer_automation.pages.chat import ChatPage
 from summer_automation.ui_tree import Bounds, UiTree
 
 
@@ -35,6 +37,27 @@ class UiTreeTests(unittest.TestCase):
         with patch.object(Adb, "list_devices", return_value=["A", "B"]):
             with self.assertRaises(DeviceSelectionError):
                 Adb.resolve_serial()
+
+    def test_merge_older_chat_page_uses_overlap(self):
+        current = [
+            Message("第二条", "incoming"),
+            Message("第三条", "outgoing"),
+        ]
+        older = [
+            Message("第一条", "incoming"),
+            Message("第二条", "incoming"),
+        ]
+
+        merged = ChatPage._merge_older_page(current, older)
+
+        self.assertEqual(
+            [(message.direction, message.text) for message in merged],
+            [
+                ("incoming", "第一条"),
+                ("incoming", "第二条"),
+                ("outgoing", "第三条"),
+            ],
+        )
 
 
 if __name__ == "__main__":

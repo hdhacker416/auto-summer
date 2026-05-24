@@ -67,6 +67,27 @@ with SummerAccount(execute=True) as account:
         print(message.direction, message.text)
 ```
 
+默认只读取当前聊天页已经渲染出来的消息。要向上滚动加载更多历史记录：
+
+```python
+from summer_automation import SummerAccount
+
+with SummerAccount(execute=True) as account:
+    friend = account.get_friend_list(limit=1)[0]
+
+    # 向上翻 20 页，尽量收集所有能被客户端加载出来的文本消息。
+    history = friend.read_history(limit=None, max_pages=20)
+
+    for message in history:
+        print(message.direction, message.text)
+```
+
+说明：
+
+- `max_pages` 是最多向上翻页次数，越大读得越多，也越慢。
+- `limit=None` 表示返回本次翻页收集到的全部消息。
+- 目前读取的是 UI 中可见/可加载的文本消息；图片、语音、撤回提示等非文本内容不会被完整结构化。
+
 ## 获取陌生人列表
 
 默认读取当前可见列表：

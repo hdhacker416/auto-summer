@@ -44,15 +44,82 @@ class ChatPage:
         self.device.audit.record("send_message", target=target, text=text, verified=verified)
         return SendResult(target=target, text=text, sent=True, verified=verified)
 
-    def read_history(self, limit: int = 50) -> list[Message]:
-        tree = self.device.dump_tree()
+    def read_history(self, limit: int | None = 50, *, max_pages: int = 1) -> list[Message]:
+        history: list[Message] = []
+        previous_signature: tuple[tuple[str, str, str | None], ...] | None = None
+        stable_pages = 0
+
+        for page_index in range(max_pages):
+            tree = self.device.dump_tree()
+            page_messages = self._parse_visible_messages(tree)
+            history = (
+                page_messages
+                if page_index == 0
+                else self._merge_older_page(history, page_messages)
+            )
+
+            signature = tuple(self._message_key(message) for message in page_messages)
+            if signature == previous_signature:
+                stable_pages += 1
+                if stable_pages >= 2:
+                    break
+            else:
+                stable_pages = 0
+            previous_signature = signature
+
+            if page_index < max_pages - 1:
+                self.device.swipe(
+                    (600, 900),
+                    (600, 2200),
+                    duration_ms=650,
+                    description="scroll chat history older",
+                )
+                time.sleep(0.8)
+
+        return history[-limit:] if limit is not None else history
+
+    def _parse_visible_messages(self, tree) -> list[Message]:
         content_nodes = tree.find_all_by_id(Ids.CHAT_CONTENT)
         messages: list[Message] = []
-        for node in content_nodes[-limit:]:
+        screen_mid_x = self._screen_mid_x(tree)
+        for node in content_nodes:
             direction = "unknown"
             bubble = node.parent
             if bubble is not None:
                 center_x, _ = bubble.center
-                direction = "outgoing" if center_x > 600 else "incoming"
+                direction = "outgoing" if center_x > screen_mid_x else "incoming"
             messages.append(Message(text=node.text, direction=direction))
         return messages
+
+    def _screen_mid_x(self, tree) -> int:
+        right = 0
+        for node in tree.walk():
+            try:
+                right = max(right, node.bounds.right)
+            except ValueError:
+                continue
+        return right // 2 if right else 600
+
+    @staticmethod
+    def _message_key(message: Message) -> tuple[str, str, str | None]:
+        return (message.direction, message.text, message.timestamp)
+
+    @classmethod
+    def _merge_older_page(
+        cls,
+        current: list[Message],
+        older_page: list[Message],
+    ) -> list[Message]:
+        if not current:
+            return older_page
+        if not older_page:
+            return current
+
+        current_keys = [cls._message_key(message) for message in current]
+        older_keys = [cls._message_key(message) for message in older_page]
+        max_overlap = min(len(current_keys), len(older_keys))
+
+        for size in range(max_overlap, 0, -1):
+            if older_keys[-size:] == current_keys[:size]:
+                return older_page[:-size] + current
+        return older_page + current

@@ -74,18 +74,25 @@ class MessagesPage:
         self.open_chat(friend)
         return self.account.chat.send_text(friend.nickname, text)
 
-    def read_history(self, friend: Friend, *, limit: int = 50) -> list[Message]:
+    def read_history(
+        self,
+        friend: Friend,
+        *,
+        limit: int | None = 50,
+        max_pages: int = 1,
+    ) -> list[Message]:
         self.open_chat(friend)
-        return self.account.chat.read_history(limit=limit)
+        return self.account.chat.read_history(limit=limit, max_pages=max_pages)
 
     def receive_messages(
         self,
         friend: Friend,
         *,
         since: str | None = None,
-        limit: int = 50,
+        limit: int | None = 50,
+        max_pages: int = 1,
     ) -> list[Message]:
-        messages = self.read_history(friend, limit=limit)
+        messages = self.read_history(friend, limit=limit, max_pages=max_pages)
         if since is None:
             return messages
         return [message for message in messages if message.timestamp and message.timestamp > since]
